@@ -1,0 +1,122 @@
+package main
+
+import (
+	"unsafe"
+
+	"github.com/go-gl/gl/v2.1/gl"
+
+	_ "image/png"
+)
+
+func cube_vertices(block Vertex, n float32) VertexList {
+	// Return the vertices of the cube at position x, y, z with size 2*n.
+
+	return VertexList([]Vertex{
+		NewVertex(block.x-n, block.y+n, block.z-n), NewVertex(block.x-n, block.y+n, block.z+n), NewVertex(block.x+n, block.y+n, block.z+n), NewVertex(block.x+n, block.y+n, block.z-n), // top
+		NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x-n, block.y-n, block.z+n), // bottom
+		NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x-n, block.y-n, block.z+n), NewVertex(block.x-n, block.y+n, block.z+n), NewVertex(block.x-n, block.y+n, block.z-n), // left
+		NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x+n, block.y+n, block.z-n), NewVertex(block.x+n, block.y+n, block.z+n), // right
+		NewVertex(block.x-n, block.y-n, block.z+n), NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x+n, block.y+n, block.z+n), NewVertex(block.x-n, block.y+n, block.z+n), // front
+		NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x-n, block.y+n, block.z-n), NewVertex(block.x+n, block.y+n, block.z-n), // back
+	})
+}
+
+func drawPolygon(gl_mode uint32, vertex_data VertexList) {
+	gl.Begin(gl_mode)
+	gl.Color3f(0.5, 0.5, 0.5)
+	for _, v := range vertex_data {
+		gl.Vertex3f(v.x, v.y, v.z)
+	}
+	gl.End()
+}
+
+type Coord struct {
+	x, y int
+}
+
+type CoordList []Coord
+
+func NewCoordList(coords []Coord) CoordList {
+	return CoordList(coords)
+}
+
+func (cl CoordList) draw(gl_mode uint32) {
+	// clearcolor
+	// clear
+	gl.Begin(gl_mode)
+	gl.Color3f(0.5, 0.5, 0.5)
+	for _, c := range cl {
+		gl.Vertex2i(int32(c.x), int32(c.y))
+	}
+	gl.End()
+}
+
+type Batch struct {
+	lists []BatchVertexList
+}
+
+func NewBatch() *Batch {
+	return &Batch{lists: make([]BatchVertexList, 0, 10)}
+}
+
+func (b *Batch) add(gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) BatchVertexList {
+	bvl := NewBatchVertexList(b, gl_mode, vertex_data, texture_data)
+	b.lists = append(b.lists, bvl)
+	return bvl
+}
+
+func (b *Batch) draw() {
+
+	num := int32(len(b.lists))
+
+	id_list := make([]uint32, num, num)
+	for i, list := range b.lists {
+		id_list[i] = list.list_index
+	}
+
+	gl.CallLists(num, gl.UNSIGNED_INT, unsafe.Pointer(&id_list[0]))
+}
+
+type BatchVertexList struct {
+	gl_mode    uint32
+	parent     *Batch
+	list_index uint32
+}
+
+var last_bvl_id = 0
+
+func NewBatchVertexList(b *Batch, gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) BatchVertexList {
+	bvl := BatchVertexList{gl_mode: gl_mode /*vl: vertex_data, */, parent: b}
+
+	list_index := gl.GenLists(1)
+	gl.NewList(list_index, gl.COMPILE)
+	bvl.draw(vertex_data, texture_data)
+	gl.EndList()
+
+	bvl.list_index = list_index
+
+	return bvl
+}
+
+func (bvl BatchVertexList) delete() {
+	// free the structure, if necessary
+	// removes itself from the batch its part of as well.
+	b := bvl.parent
+	for i, bvl1 := range b.lists {
+		if bvl.list_index == bvl1.list_index {
+			b.lists = append(b.lists[:i], b.lists[i+1:]...)
+			return
+		}
+	}
+	gl.DeleteLists(bvl.list_index, 1)
+}
+
+func (bvl BatchVertexList) draw(vl VertexList, texture_data TextureCoordList) {
+	gl.Begin(bvl.gl_mode)
+	for i, v := range vl {
+		t := texture_data[i]
+		gl.TexCoord2f(t.x, t.y)
+		gl.Vertex3f(v.x, v.y, v.z)
+	}
+	gl.End()
+}
