@@ -1,5 +1,7 @@
 
 This is small example 3D golang Minecraft game.
+Its meant as a proof-of-concept 3d game in Go.
+Its kept as simple as possible with few features.
 
 go-gl and glfw pkgs are used, but no other frameworks.
 
