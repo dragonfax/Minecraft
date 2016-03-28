@@ -30,7 +30,7 @@ const (
 type Model struct {
 	world   map[Vertex]TextureType
 	shown   map[Vertex]TextureType
-	_shown  map[Vertex]BatchVertexList
+	_shown  map[Vertex]CallList
 	sectors map[Vertex][]Vertex
 
 	// texture *Texture
@@ -50,8 +50,8 @@ func NewModel() *Model {
 	// Same mapping as `world` but only contains blocks that are shown.
 	self.shown = make(map[Vertex]TextureType)
 
-	// Mapping from position to a pyglet `VertextList` for all shown blocks.
-	self._shown = make(map[Vertex]BatchVertexList)
+	// Mapping from position to a VertextList for all shown blocks.
+	self._shown = make(map[Vertex]CallList)
 
 	// Mapping from sector to a list of positions inside that sector.
 	self.sectors = make(map[Vertex][]Vertex)

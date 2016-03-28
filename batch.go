@@ -52,15 +52,15 @@ func (cl CoordList) draw(gl_mode uint32) {
 }
 
 type Batch struct {
-	lists []BatchVertexList
+	lists []CallList
 }
 
 func NewBatch() *Batch {
-	return &Batch{lists: make([]BatchVertexList, 0, 10)}
+	return &Batch{lists: make([]CallList, 0, 10)}
 }
 
-func (b *Batch) add(gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) BatchVertexList {
-	bvl := NewBatchVertexList(b, gl_mode, vertex_data, texture_data)
+func (b *Batch) add(gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) CallList {
+	bvl := NewCallList(b, gl_mode, vertex_data, texture_data)
 	b.lists = append(b.lists, bvl)
 	return bvl
 }
@@ -77,20 +77,19 @@ func (b *Batch) draw() {
 	gl.CallLists(num, gl.UNSIGNED_INT, unsafe.Pointer(&id_list[0]))
 }
 
-type BatchVertexList struct {
-	gl_mode    uint32
+type CallList struct {
 	parent     *Batch
 	list_index uint32
 }
 
 var last_bvl_id = 0
 
-func NewBatchVertexList(b *Batch, gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) BatchVertexList {
-	bvl := BatchVertexList{gl_mode: gl_mode /*vl: vertex_data, */, parent: b}
+func NewCallList(b *Batch, gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) CallList {
+	bvl := CallList{parent: b}
 
 	list_index := gl.GenLists(1)
 	gl.NewList(list_index, gl.COMPILE)
-	bvl.draw(vertex_data, texture_data)
+	bvl.draw(gl_mode, vertex_data, texture_data)
 	gl.EndList()
 
 	bvl.list_index = list_index
@@ -98,7 +97,7 @@ func NewBatchVertexList(b *Batch, gl_mode uint32, vertex_data VertexList, textur
 	return bvl
 }
 
-func (bvl BatchVertexList) delete() {
+func (bvl CallList) delete() {
 	// free the structure, if necessary
 	// removes itself from the batch its part of as well.
 	b := bvl.parent
@@ -111,8 +110,8 @@ func (bvl BatchVertexList) delete() {
 	gl.DeleteLists(bvl.list_index, 1)
 }
 
-func (bvl BatchVertexList) draw(vl VertexList, texture_data TextureCoordList) {
-	gl.Begin(bvl.gl_mode)
+func (bvl CallList) draw(gl_mode uint32, vl VertexList, texture_data TextureCoordList) {
+	gl.Begin(gl_mode)
 	for i, v := range vl {
 		t := texture_data[i]
 		gl.TexCoord2f(t.x, t.y)
