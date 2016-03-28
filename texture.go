@@ -13,23 +13,23 @@ const (
 	TEXTURE_PATH = "texture.png"
 )
 
-func tex_coord(x, y float32) [4]struct{ x, y float32 } {
+func tex_coord(x, y float32) [4]Point2f {
 	// Return the bounding vertices of the texture square.
 
 	var n float32 = 4 // original 4,  1/4 is the size of a texture in the image
 	m := 1.0 / n
 	dx := x * m
 	dy := y * m
-	return [4]struct{ x, y float32 }{{dx, dy}, {dx + m, dy}, {dx + m, dy + m}, {dx, dy + m}}
+	return [4]Point2f{{dx, dy}, {dx + m, dy}, {dx + m, dy + m}, {dx, dy + m}}
 }
 
-func tex_coords(topx, topy, bottomx, bottomy, sidex, sidey float32) TextureCoordList {
+func tex_coords(topx, topy, bottomx, bottomy, sidex, sidey float32) []Point2f {
 	// Return a list of the texture squares for the top, bottom and side.
 
 	top := tex_coord(topx, topy)
 	bottom := tex_coord(bottomx, bottomy)
 	side := tex_coord(sidex, sidey)
-	result := make(TextureCoordList, 24, 24)
+	result := make([]Point2f, 24, 24)
 	copy(result[0:4], top[:])
 	copy(result[4:8], bottom[:])
 	copy(result[8:12], side[:])
@@ -38,10 +38,6 @@ func tex_coords(topx, topy, bottomx, bottomy, sidex, sidey float32) TextureCoord
 	copy(result[20:24], side[:])
 	return result
 }
-
-type TextureCoordList []struct{ x, y float32 }
-
-type VertexList []Vertex
 
 func load_texture(file string) {
 

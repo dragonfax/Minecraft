@@ -16,7 +16,7 @@ var sand = tex_coords(1, 1, 1, 1, 1, 1)
 var brick = tex_coords(2, 0, 2, 0, 2, 0)
 var stone = tex_coords(2, 1, 2, 1, 2, 1)
 
-var textures = map[TextureType]TextureCoordList{GRASS: grass, SAND: sand, BRICK: brick, STONE: stone}
+var textures = map[TextureType][]Point2f{GRASS: grass, SAND: sand, BRICK: brick, STONE: stone}
 
 type TextureType int
 

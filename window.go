@@ -28,17 +28,11 @@ type Window struct {
 	glwindow  *glfw.Window
 	exclusive bool
 	flying    bool
-	strafe    struct {
-		x int
-		y int
-	}
-	position Vertex
-	rotation struct {
-		x float32
-		y float32
-	}
+	strafe    Point2i
+	position  Vertex
+	rotation  Point2f
 	sector    Vertex
-	reticle   CoordList
+	reticle   []Point2i
 	dy        float32
 	inventory []TextureType
 	block     TextureType
@@ -82,7 +76,7 @@ func NewWindow(glwindow *glfw.Window) *Window {
 	self.sector = nilVertex
 
 	// The crosshairs at the center of the screen.
-	self.reticle = CoordList{}
+	self.reticle = []Point2i{}
 
 	// Velocity in the y (upward) direction.
 	self.dy = 0
@@ -473,7 +467,7 @@ func (self *Window) on_resize(width, height int) {
 	}*/
 	x, y := self.width()/2, self.height()/2
 	n := 10
-	self.reticle = NewCoordList([]Coord{{x - n, y}, {x + n, y}, {x, y - n}, {x, y + n}})
+	self.reticle = []Point2i{{x - n, y}, {x + n, y}, {x, y - n}, {x, y + n}}
 }
 
 func (self *Window) set_2d() {
@@ -556,5 +550,5 @@ func (self *Window) draw_reticle() {
 
 	//
 	gl.Color3d(0, 0, 0)
-	self.reticle.draw(gl.LINES)
+	drawPoint2i(gl.LINES, self.reticle)
 }

@@ -8,20 +8,20 @@ import (
 	_ "image/png"
 )
 
-func cube_vertices(block Vertex, n float32) VertexList {
+func cube_vertices(block Vertex, n float32) []Vertex {
 	// Return the vertices of the cube at position x, y, z with size 2*n.
 
-	return VertexList([]Vertex{
+	return []Vertex{
 		NewVertex(block.x-n, block.y+n, block.z-n), NewVertex(block.x-n, block.y+n, block.z+n), NewVertex(block.x+n, block.y+n, block.z+n), NewVertex(block.x+n, block.y+n, block.z-n), // top
 		NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x-n, block.y-n, block.z+n), // bottom
 		NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x-n, block.y-n, block.z+n), NewVertex(block.x-n, block.y+n, block.z+n), NewVertex(block.x-n, block.y+n, block.z-n), // left
 		NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x+n, block.y+n, block.z-n), NewVertex(block.x+n, block.y+n, block.z+n), // right
 		NewVertex(block.x-n, block.y-n, block.z+n), NewVertex(block.x+n, block.y-n, block.z+n), NewVertex(block.x+n, block.y+n, block.z+n), NewVertex(block.x-n, block.y+n, block.z+n), // front
 		NewVertex(block.x+n, block.y-n, block.z-n), NewVertex(block.x-n, block.y-n, block.z-n), NewVertex(block.x-n, block.y+n, block.z-n), NewVertex(block.x+n, block.y+n, block.z-n), // back
-	})
+	}
 }
 
-func drawPolygon(gl_mode uint32, vertex_data VertexList) {
+func drawPolygon(gl_mode uint32, vertex_data []Vertex) {
 	gl.Begin(gl_mode)
 	gl.Color3f(0.5, 0.5, 0.5)
 	for _, v := range vertex_data {
@@ -30,19 +30,15 @@ func drawPolygon(gl_mode uint32, vertex_data VertexList) {
 	gl.End()
 }
 
-type Coord struct {
+type Point2i struct {
 	x, y int
 }
 
-type CoordList []Coord
-
-func NewCoordList(coords []Coord) CoordList {
-	return CoordList(coords)
+type Point2f struct {
+	x, y float32
 }
 
-func (cl CoordList) draw(gl_mode uint32) {
-	// clearcolor
-	// clear
+func drawPoint2i(gl_mode uint32, cl []Point2i) {
 	gl.Begin(gl_mode)
 	gl.Color3f(0.5, 0.5, 0.5)
 	for _, c := range cl {
@@ -59,7 +55,7 @@ func NewBatch() *Batch {
 	return &Batch{lists: make([]CallList, 0, 10)}
 }
 
-func (b *Batch) add(gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) CallList {
+func (b *Batch) add(gl_mode uint32, vertex_data []Vertex, texture_data []Point2f) CallList {
 	bvl := NewCallList(b, gl_mode, vertex_data, texture_data)
 	b.lists = append(b.lists, bvl)
 	return bvl
@@ -84,7 +80,7 @@ type CallList struct {
 
 var last_bvl_id = 0
 
-func NewCallList(b *Batch, gl_mode uint32, vertex_data VertexList, texture_data TextureCoordList) CallList {
+func NewCallList(b *Batch, gl_mode uint32, vertex_data []Vertex, texture_data []Point2f) CallList {
 	bvl := CallList{parent: b}
 
 	list_index := gl.GenLists(1)
@@ -110,7 +106,7 @@ func (bvl CallList) delete() {
 	gl.DeleteLists(bvl.list_index, 1)
 }
 
-func (bvl CallList) draw(gl_mode uint32, vl VertexList, texture_data TextureCoordList) {
+func (bvl CallList) draw(gl_mode uint32, vl []Vertex, texture_data []Point2f) {
 	gl.Begin(gl_mode)
 	for i, v := range vl {
 		t := texture_data[i]
