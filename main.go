@@ -12,10 +12,7 @@ import (
 	"github.com/go-gl/glfw/v3.1/glfw"
 )
 
-const (
-	TICKS_PER_SEC  = 60
-	FRAMES_PER_SEC = 60
-)
+const TICKS_PER_SEC = 60
 
 func init() {
 	// This is needed to arrange that main() runs on main thread.
@@ -61,11 +58,8 @@ func initGLFW() *glfw.Window {
 }
 
 func get_time() float64 {
-	return float64(time.Now().UnixNano())
-}
-
-func get_time_in_seconds() float64 {
-	return get_time() / float64(time.Second)
+	// in seconds
+	return float64(time.Now().UnixNano()) / float64(time.Second)
 }
 
 func main() {
@@ -77,21 +71,14 @@ func main() {
 
 	enable_cpuprofile()
 
-	last_time := get_time_in_seconds()
-	last_time2 := get_time_in_seconds()
+	last_time := get_time()
 	for !glwindow.ShouldClose() {
 
-		now := get_time_in_seconds()
-
+		now := get_time()
 		dt := now - last_time // in seconds
 		if dt > 1/TICKS_PER_SEC {
 			last_time = now
 			window.update(float32(dt))
-		}
-
-		fps_dt := now - last_time2
-		if fps_dt > 1/FRAMES_PER_SEC {
-			last_time2 = now
 			window.on_draw()
 		}
 
